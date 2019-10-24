@@ -11,7 +11,7 @@ model Immigration
 
 global{
 	float step <- 1 #month;
-	float temps <- 0;
+	float temps <- 0.0;
 	int dureMandat <- 0;
 	list<string> DEFAULT_REGIME <- [ "COURT", "LONG"];
 	int aideEntreprenariat <- rnd(10);
@@ -38,17 +38,33 @@ species gouvernement{
 				}
 			}
 		}else{
+			
 			//a completer
 		}
 	}
 	reflex update_time{
 		temps <- temps +1 ;
 		if (temps = 61){
-			temps <-0;
+			temps <- 0.0;
 		}
 	}
 	reflex creer_emploi{
 		
+	}
+
+	bool aide_creation_emploi{
+		bool el <- false;
+		if(aide_entreprenariat>5) {
+			ask pays_sud{
+			el<- self.estStable;
+		}
+	
+	} return el;
+}
+	
+	action changer_regime(int f){
+		duree_regime <- f;
+		regime <- (f>5)? DEFAULT_REGIME[0]:DEFAULT_REGIME[1];
 	}
 }
 
@@ -61,10 +77,12 @@ species individues{
 	bool estChomeur;
 	int age;
 	int niveau_sensibilisation;
+	
+	
 	reflex trouver_travail{
 		
 	}
-		reflex augmenter_compte{
+	reflex augmenter_compte{
 		
 	}
 	reflex creation_entreprise when:est_entrepreneur and !a_une_entreprise{
@@ -72,6 +90,18 @@ species individues{
 	}
 	reflex immigrer{
 		
+	}
+	
+	bool can_work{
+		return age<35 and age>15;
+	}
+	
+	bool est_sensbiliser{
+		return flip(niveau_sensibilisation/10) 
+				or 
+				(niveau_sensibilisation>5 and niveau_alphabetisation>5) 
+				or 
+				(flip(niveau_alphabetisation/10) and est_entrepreneur); 
 	}
 	
 }
@@ -105,16 +135,17 @@ species pays_nord{
 species pays_sud{
 	gouvernement gouv;
 	individues population;
+	societe_civile sc;
 	float croissance_demographique;
 	float pib;
 	float croissance_pib;
 	float taux_alphabetisation;
-	societe_civile sc;
 	int nbr_entrepreneurs;
 	int nbr_emigres;
 	int nbr_tentatives_depart;
 	int nbr_chomeurs;
 	int pourcentage_alphabetise;
+	bool estStable;
 	
 	
 	
@@ -122,12 +153,6 @@ species pays_sud{
 
 
 experiment exec {	
-	
-	// Define parameters to explore here if necessary
-	// parameter "My parameter" category: "My parameters" var: one_global_attribute;
-	// Define a method of exploration
-	// method exhaustive minimize: one_expression;
-	// Define attributes, actions, a init section and behaviors if necessary
-	// init { }
+
 
 }
