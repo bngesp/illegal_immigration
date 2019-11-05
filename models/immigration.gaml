@@ -12,6 +12,7 @@ model Immigration
 global{
 	float step <- 1 #month;
 	float temps <- 0.0;
+	float tmp<-0;
 	int mois <-0 ;
 	int dureMandat <- 0;
 	int annee<-0;
@@ -29,12 +30,18 @@ global{
 			aide_entreprenariat<- aideEntreprenariat;
 			duree_regime<- dureMandat;
 		}
+		
+	}
+	reflex update_time{
+		tmp <- tmp +1 ;
+		if (tmp = 61){
+			tmp <- 0.0;
+		}
 		if(mois = 13){
 			mois<- 1;
 			annee <- annee +1;
 		}
 	}
-	
 	
 }
 
@@ -49,7 +56,7 @@ species gouvernement{
 	
 	reflex update_annee{ annee_ecoule <-  (temps div duree_regime = 0 ) ? 0 : annee_ecoule+1;}
 	
-	reflex choix_politique when: temps=60{
+	reflex choix_politique when: tmp=60{
 		if (duree_regime = 5){
 			ask pays_nord{
 				if (impact_election){
