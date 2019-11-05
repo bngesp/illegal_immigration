@@ -14,6 +14,7 @@ global{
 	float temps <- 0.0;
 	int dureMandat <- 0;
 	int emploi_disponible <- 0;
+	string regime;
 	list<string> DEFAULT_REGIME <- [ "COURT", "LONG"];
 	int aideEntreprenariat <- rnd(10);
 	int gestionRessource <- rnd(10);
@@ -217,10 +218,23 @@ species pays_sud{
 		population <- list(individues);
 	}
 	
+	reflex update_temps{
+		temps <- (temps = gouv.duree_regime)? 0 : temps +1;
+	}
 }
 
 
 experiment exec {	
-
-
+	
+	// les parameters 
+	parameter 'type de regime du gouvermen' var:regime among:DEFAULT_REGIME;
+	parameter "duree regime" var: dureMandat max: (regime = DEFAULT_REGIME[0])?5:20 min:5 step: 5; 
+		
+	
+	
+	output {
+		
+		
+		
+	}
 }
