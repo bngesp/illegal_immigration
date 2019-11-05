@@ -5,7 +5,7 @@
 * Tags: Tag1, Tag2, TagN
 ***/
 
-model Immigration
+model Immigration_robert
 
 /* Insert your model definition here */
 
