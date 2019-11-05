@@ -20,11 +20,13 @@ global{
 	int aideEntreprenariat <- rnd(10);
 	int gestionRessource <- rnd(10);
 	init{
-		
+		create individues number:4;
+		create pays_sud number:1{
+			population <- individues;
+		}
 	}
 	reflex update_time{
 		temps <- temps +1 ;
-		mois <- mois + 1;
 		if (temps = 61){
 			temps <- 0.0;
 		}
@@ -43,7 +45,9 @@ species gouvernement{
 	int aide_entreprenariat;
 	int duree_regime; 
 	int richesse_pays;
+	int annee_ecoule<- 0;
 	
+	reflex update_annee{ annee_ecoule <-  (temps div duree_regime = 0 ) ? 0 : annee_ecoule+1;}
 	
 	reflex choix_politique when: temps=60{
 		if (duree_regime = 5){
@@ -170,7 +174,7 @@ species pays_nord{
     int richesse;
     int richesse_pays;
     
-    reflex generer_richesse{
+    reflex s_enrichir{
     	richesse_pays <- richesse_pays + exploitation_ressources*10000;
     }
     reflex election when: temps=60{
@@ -178,6 +182,8 @@ species pays_nord{
     	politique_immigration <- rnd(10);
     	impact_election <- rnd(0,1);	
     }
+
+
 }
 
 
@@ -195,11 +201,38 @@ species pays_sud{
 	int nbr_tentatives_depart;
 	int nbr_chomeurs;
 	bool estStable;
+	float taux_sensibilisation;
+	int nbr_hbt_a_sensibiliser <- 0;
+	
+	
 	
 	reflex sensibiliser{
-		if(sc.sensibilisation>5){
+		//int impact_sensbilisation;
+		int nbr_hbt <- length(population);
+		
+		if( (temps div gouv.duree_regime)=0){
+			nbr_hbt_a_sensibiliser<- int(nbr_hbt*taux_sensibilisation/100);
+		}
+		if(nbr_hbt_a_sensibiliser != 0 ){
+			int nbr_hbt_a_sensibiliser_par_mois <- int(nbr_hbt_a_sensibiliser/gouv.duree_regime);
+			int index <- nbr_hbt_a_sensibiliser_par_mois*gouv.annee_ecoule;
+			if(index +nbr_hbt_a_sensibiliser_par_mois > nbr_hbt-1) {
+				write "tout le pays est sensibilise";
+			}
+			else{
+				loop vrr from:index to: index+nbr_hbt_a_sensibiliser_par_mois{ 
+					 population[vrr].niveau_sensibilisation <- (population[vrr].niveau_sensibilisation + sc.sensibilisation ) div 10 ;
+				}
+			}
 			
 		}
+	}
+	
+	reflex update_population when:(temps div 12)=0 {
+		int peuple <- length(individues);
+		int augmentation <- int(peuple + peuple*(croissance_demographique/100));
+		create individues number:augmentation;
+		population <- list(individues);
 	}
 	
 }
