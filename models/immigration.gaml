@@ -12,21 +12,29 @@ model Immigration
 global{
 	float step <- 1 #month;
 	float temps <- 0.0;
-	float tmp<-0;
+	float tmp<-0.0;
 	int mois <-0 ;
+	
+	//variables for species Gouvernement 
 	int dureMandat <- 0;
 	int annee<-0;
 	int emploi_disponible <- 0;
-	string regime<- "";
+	string Regime<- "";
 	list<string> DEFAULT_REGIME <- [ "COURT", "LONG"];
 	int aideEntreprenariat <- rnd(10);
 	int gestionRessource <- rnd(10);
+	
+	
+	//variables for species individues 
+	int taux_entreprenariat<-rnd(100);
+	int nbr_individues<-0;
+	
 	
 	init{
 		
 		create gouvernement number:1{
 			gestion_ressource <- gestionRessource;
-			self.regime <- regime;
+			self.regime <- Regime;
 			aide_entreprenariat<- aideEntreprenariat;
 			duree_regime<- dureMandat;
 		}
@@ -99,18 +107,16 @@ species individues{
 	}
 	reflex augmenter_compte{
 		if(!estChomeur){
-			compte <- compte + revenue/10;
-			if(a_une_entreprise){
-				compte<- compte + (budget/10)*3;
-			}
+			compte <- a_une_entreprise? int(compte + (budget/10)*3) : int(compte + revenue/10);
 		}else{
-			if(est_entrepreneur){
-				compte <- compte + rnd(-1,2)*10000;	
-			}else{
-				compte <- compte + rnd(-1,1)*10000;
-			}
+			compte <- compte + rnd(-1,1+int(est_entrepreneur))*10000;
+//			if(est_entrepreneur){
+//				compte <- compte + rnd(-1,2)*10000;	
+//			}else{
+//				compte <- compte + rnd(-1,1)*10000;
+//			}
 			if(a_une_entreprise){
-				compte<- compte + (budget/10)*3;
+				compte<- int(compte + (budget/10)*3);
 			}
 		}
 		
@@ -122,7 +128,7 @@ species individues{
 					nbr_entrepreneurs <-nbr_entrepreneurs + 1;
 				}
 				emploi_disponible <- emploi_disponible + 1;
-				budget <- compte/2;
+				budget <- int(compte/2);
 			}
 		}else{
 			if(compte>revenue*2){
@@ -130,7 +136,7 @@ species individues{
 					nbr_entrepreneurs <-nbr_entrepreneurs + 1;
 				}
 				emploi_disponible <- emploi_disponible + 2;
-				budget <- compte/2;
+				budget <- int(compte/2);
 			}
 		}
 	}
@@ -150,7 +156,7 @@ species individues{
 			compte_normalise <- 1;
 		}
 		if(compte>10000 and compte <100000){
-			compte_normalise <- compte/10000;
+			compte_normalise <- int(compte/10000);
 		}
 		ask pays_nord{
 			myself.politique_externe <- politique_immigration;
@@ -160,6 +166,7 @@ species individues{
 			ask pays_sud{
 				nbr_immigres <- nbr_immigres + 1; 
 			}
+			do die;
 		}
 	}
 	
@@ -184,7 +191,7 @@ species pays_nord{
     reflex s_enrichir{
     	richesse_pays <- richesse_pays + exploitation_ressources*10000;
     }
-    reflex election when: temps=60{
+    reflex election when: temps=dureMandat*12{
     	exploitation_ressources <- rnd(10);
     	politique_immigration <- rnd(10);
     	impact_election <- rnd(0,1);	
@@ -192,8 +199,6 @@ species pays_nord{
 
 
 }
-
-
 
 species pays_sud{
 	gouvernement gouv;
@@ -211,6 +216,10 @@ species pays_sud{
 	float taux_sensibilisation;
 	int nbr_hbt_a_sensibiliser <- 0;
 	
+	
+	init{
+		
+	}
 	
 	
 	reflex sensibiliser{
@@ -250,10 +259,17 @@ species pays_sud{
 
 experiment exec {	
 	
-	// les parameters 
-	parameter "type de regime du gouvermen" var:regime  among: [ "COURT", "LONG"];
-	parameter "duree regime" var: dureMandat max: 20 min:5 step: 5; 
-		
+	// les parameters Gouvernement
+	parameter "type de regime du gouverment" var:Regime  among: [ "COURT", "LONG"] category:gouvernement;
+	parameter "duree regime" var: dureMandat max: 20 min:5 step: 5 category:gouvernement; 
+	parameter "echelle aide a l'entreprenariat" var:aideEntreprenariat max:10 min:1 category:gouvernement;
+	parameter "echelle de la gestion des ressources" var:gestionRessource max:10 min:1 category:gouvernement;
+	
+	// Individues
+	parameter "taille de la population " var:nbr_individues min:1 category:individues;
+	parameter "taille de la population " var:nbr_individues min:1 category:individues;
+	
+	
 	
 	
 	output {
