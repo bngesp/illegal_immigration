@@ -12,7 +12,7 @@ model Immigration
 global{
 	float step <- 1 #month;
 	float temps <- 0.0;
-	int dureMandat <- 0;
+	int dureeMandat <- 0;
 	list<string> DEFAULT_REGIME <- [ "COURT", "LONG"];
 	int aideEntreprenariat <- rnd(10);
 	int gestionRessource <- rnd(10);
@@ -109,6 +109,9 @@ species individues{
 species societe_civile{
 	int sensibilisation;
 	
+	reflex sensibiliser when:temps=60{
+		sensibilisation <- rnd(10);
+	}
 	
 }
 
@@ -134,7 +137,7 @@ species pays_nord{
 
 species pays_sud{
 	gouvernement gouv;
-	individues population;
+	list<individues> population;
 	societe_civile sc;
 	float croissance_demographique;
 	float pib;
@@ -144,10 +147,13 @@ species pays_sud{
 	int nbr_emigres;
 	int nbr_tentatives_depart;
 	int nbr_chomeurs;
-	int pourcentage_alphabetise;
 	bool estStable;
 	
-	
+	reflex sensibiliser{
+		if(sc.sensibilisation>5){
+			
+		}
+	}
 	
 }
 
