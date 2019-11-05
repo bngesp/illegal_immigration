@@ -16,25 +16,25 @@ global{
 	int dureMandat <- 0;
 	int annee<-0;
 	int emploi_disponible <- 0;
+	string regime<- "";
 	list<string> DEFAULT_REGIME <- [ "COURT", "LONG"];
 	int aideEntreprenariat <- rnd(10);
 	int gestionRessource <- rnd(10);
+	
 	init{
-		create individues number:4;
-		create pays_sud number:1{
-			population <- individues;
-		}
-	}
-	reflex update_time{
-		temps <- temps +1 ;
-		if (temps = 61){
-			temps <- 0.0;
+		
+		create gouvernement number:1{
+			gestion_ressource <- gestionRessource;
+			self.regime <- regime;
+			aide_entreprenariat<- aideEntreprenariat;
+			duree_regime<- dureMandat;
 		}
 		if(mois = 13){
 			mois<- 1;
 			annee <- annee +1;
 		}
 	}
+	
 	
 }
 
@@ -44,7 +44,7 @@ species gouvernement{
 	string regime;
 	int aide_entreprenariat;
 	int duree_regime; 
-	int richesse_pays;
+	int richesse_pays<- 0;
 	int annee_ecoule<- 0;
 	
 	reflex update_annee{ annee_ecoule <-  (temps div duree_regime = 0 ) ? 0 : annee_ecoule+1;}
@@ -235,10 +235,23 @@ species pays_sud{
 		population <- list(individues);
 	}
 	
+	reflex update_temps{
+		temps <- (temps = gouv.duree_regime)? 0 : temps +1;
+	}
 }
 
 
 experiment exec {	
-
-
+	
+	// les parameters 
+	parameter "type de regime du gouvermen" var:regime  among: [ "COURT", "LONG"];
+	parameter "duree regime" var: dureMandat max: 20 min:5 step: 5; 
+		
+	
+	
+	output {
+		
+		
+		
+	}
 }
