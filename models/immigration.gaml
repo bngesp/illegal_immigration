@@ -14,7 +14,10 @@ global{
 	float temps <- 0.0;
 	float tmp<-0.0;
 	int mois <-0 ;
-	
+	float taux_sensibilisation<-rnd(100);
+	float taux_chomage<-rnd(100);
+	int taux_entreprenariat<-rnd(100);
+	float taux_alphabetisation<-rnd(100);
 	//variables for species Gouvernement 
 	int dureMandat <- 0;
 	int annee<-0;
@@ -26,7 +29,7 @@ global{
 	
 	
 	//variables for species individues 
-	int taux_entreprenariat<-rnd(100);
+	
 	int nbr_individues<-0;
 	
 	
@@ -97,6 +100,47 @@ species individues{
 	int niveau_sensibilisation;
 	int politique_externe;
 	
+	init{
+		age <- rnd(15,35);
+		int tirage_alp <- rnd(1,10);
+		if(tirage_alp<=taux_alphabetisation/10){
+			niveau_alphabetisation<-rnd(6,10);
+		}else{
+			niveau_alphabetisation<-rnd(1,5);
+		}
+		int tirage_ent<- rnd(1,100);
+		if(tirage_ent<=taux_entreprenariat){
+			est_entrepreneur<-true;
+			if(rnd(1,4)<2){
+				a_une_entreprise <- true;
+				budget<-rnd(50000,3000000);
+				compte<-budget;
+			}else{
+				a_une_entreprise <- false;
+				compte<-rnd(0,50000);
+			}
+		}else{
+			est_entrepreneur<-false;
+		}
+		int tirage_sen<-rnd(1,10);
+		if(tirage_sen<=taux_sensibilisation/10){
+			niveau_sensibilisation<-rnd(6,10);
+		}else{
+			niveau_sensibilisation<-rnd(1,5);
+		}
+		int tirage_cho<-rnd(1,10);
+		if(tirage_cho<=taux_chomage/10){
+			estChomeur <- true;
+			if(!est_entrepreneur){
+				compte<-rnd(0,10000);
+			}
+		}else{
+			estChomeur <- false;
+			revenue<-niveau_alphabetisation*96000;
+			compte<- (revenue/10)*rnd(5,10);
+		}
+	}
+	
 	reflex trouver_travail when: estChomeur{
 		if(emploi_disponible >0)
 		{
@@ -161,8 +205,8 @@ species individues{
 		ask pays_nord{
 			myself.politique_externe <- politique_immigration;
 		}
-		int seuil_immigration <- compte_normalise*6 + niveau_sensibilisation*4 + politique_externe*4 + rnd(0,1);
-		if(seuil_immigration > 70){
+		int seuil_immigration <- (compte_normalise*6 + niveau_sensibilisation*4 + politique_externe*4)*rnd(0,1);
+		if(seuil_immigration < 70){
 			ask pays_sud{
 				nbr_immigres <- nbr_immigres + 1; 
 			}
@@ -214,6 +258,9 @@ species pays_sud{
 	int nbr_chomeurs;
 	bool estStable;
 	float taux_sensibilisation;
+	float taux_entreprenariat;
+	float taux_chomage;
+	
 	int nbr_hbt_a_sensibiliser <- 0;
 	
 	
