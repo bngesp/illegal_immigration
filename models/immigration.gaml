@@ -14,10 +14,6 @@ global{
 	float temps <- 0.0;
 	float tmp<-0.0;
 	int mois <-0 ;
-	float taux_sensibilisation<-rnd(100);
-	float taux_chomage<-rnd(100);
-	int taux_entreprenariat<-rnd(100);
-	float taux_alphabetisation<-rnd(100);
 	//variables for species Gouvernement 
 	int dureMandat <- 0;
 	int annee<-0;
@@ -29,8 +25,23 @@ global{
 	
 	
 	//variables for species individues 
+	int nbr_individues<-1;
 	
-	int nbr_individues<-0;
+	
+	//variables for pays nord 
+	int exploitationRessources <- rnd(10);
+	int politiqueImmigration <- rnd(10);
+	bool impactElection <- false;
+    
+	//variable for pay sud
+	float croissance_demographique<-1.0 *rnd(100);
+	float taux_sensibilisation<-1.0 *rnd(100);
+	float taux_chomage<-1.0 *rnd(100);
+	int taux_entreprenariat<-rnd(100);
+	float taux_alphabetisation<-1.0 *rnd(100);
+	
+	//varibale for societe civile
+	int sensibilisation <- rnd(100);
 	
 	
 	init{
@@ -41,6 +52,30 @@ global{
 			aide_entreprenariat<- aideEntreprenariat;
 			duree_regime<- dureMandat;
 		}
+		
+		create pays_nord number:1{
+			exploitation_ressources<- exploitationRessources;
+			politique_immigration <- politiqueImmigration;
+			impact_election <- impactElection;
+		}
+		
+		create societe_civile number:1{
+			self.sensibilisation <- sensibilisation;
+		}
+		
+		create individues number:nbr_individues;
+		
+		create pays_sud number:1{
+			self.croissance_demographique<- croissance_demographique;
+			self.taux_alphabetisation <- taux_alphabetisation;
+			self.taux_chomage <- taux_chomage;
+			self.taux_entreprenariat<-taux_entreprenariat;
+			self.taux_sensibilisation <- taux_sensibilisation;
+			self.pop <- list(individues);
+			self.gouv <- gouvernement[0];
+			self.sc <- societe_civile[0];
+		}
+		
 		
 	}
 	reflex update_time{
@@ -205,12 +240,20 @@ species individues{
 		ask pays_nord{
 			myself.politique_externe <- politique_immigration;
 		}
-		int seuil_immigration <- (compte_normalise*6 + niveau_sensibilisation*4 + politique_externe*4)*rnd(0,1);
+		int depart <- rnd(0,1);
+		int seuil_immigration <- compte_normalise*6 + niveau_sensibilisation*4 + politique_externe*4;
 		if(seuil_immigration < 70){
-			ask pays_sud{
-				nbr_immigres <- nbr_immigres + 1; 
-			}
+			if( depart = 1){
+				ask pays_sud{
+					nbr_immigres <- nbr_immigres + 1; 
+				}
 			do die;
+			}else{
+				ask pays_sud{
+					nbr_tentatives_depart	<- nbr_tentatives_depart + 1; 
+				}
+			}
+			
 		}
 	}
 	
@@ -229,8 +272,8 @@ species pays_nord{
 	int exploitation_ressources;
 	int politique_immigration;
 	bool impact_election;
-    int richesse;
-    int richesse_pays;
+   
+    int richesse_pays<- 0;
     
     reflex s_enrichir{
     	richesse_pays <- richesse_pays + exploitation_ressources*10000;
@@ -246,32 +289,30 @@ species pays_nord{
 
 species pays_sud{
 	gouvernement gouv;
-	list<individues> population;
+	list<individues> pop;
 	societe_civile sc;
 	float croissance_demographique;
-	float pib;
-	float croissance_pib;
 	float taux_alphabetisation;
 	int nbr_entrepreneurs;
-	int nbr_immigres;
-	int nbr_tentatives_depart;
-	int nbr_chomeurs;
-	bool estStable;
+	int nbr_immigres<- 0;
+	int nbr_tentatives_depart<- 0;
+	int nbr_chomeurs<- 0;
+//	bool estStable;
 	float taux_sensibilisation;
 	float taux_entreprenariat;
 	float taux_chomage;
-	
 	int nbr_hbt_a_sensibiliser <- 0;
 	
 	
 	init{
-		
+		pop <- list(individues);
+		write "la list des individus "+ pop;
 	}
 	
 	
 	reflex sensibiliser{
 		//int impact_sensbilisation;
-		int nbr_hbt <- length(population);
+		int nbr_hbt <- length(pop);
 		
 		if( (temps div gouv.duree_regime)=0){
 			nbr_hbt_a_sensibiliser<- int(nbr_hbt*taux_sensibilisation/100);
@@ -284,20 +325,20 @@ species pays_sud{
 			}
 			else{
 				loop vrr from:index to: index+nbr_hbt_a_sensibiliser_par_mois{ 
-					 population[vrr].niveau_sensibilisation <- (population[vrr].niveau_sensibilisation + sc.sensibilisation ) div 10 ;
+					 pop[vrr].niveau_sensibilisation <- (pop[vrr].niveau_sensibilisation + sc.sensibilisation ) div 10 ;
 				}
 			}
 			
 		}
 	}
 	
-	reflex update_population when:(temps div 12)=0 {
-		int peuple <- length(individues);
-		int augmentation <- int(peuple + peuple*(croissance_demographique/100));
-		create individues number:augmentation;
-		population <- list(individues);
-	}
-	
+//	reflex update_pop when:(temps div 12)=0 {
+//		int peuple <- length(individues);
+//		int augmentation <- int(peuple + peuple*(croissance_demographique/100));
+//		create individues number:augmentation;
+//		pop <- list(individues);
+//	}
+//	
 	reflex update_temps{
 		temps <- (temps = gouv.duree_regime)? 0 : temps +1;
 	}
@@ -314,14 +355,11 @@ experiment exec {
 	
 	// Individues
 	parameter "taille de la population " var:nbr_individues min:1 category:individues;
-	parameter "taille de la population " var:nbr_individues min:1 category:individues;
 	
-	
-	
-	
+
 	output {
 		
-		
+		monitor "la population est : " value:length(pays_sud[0].pop);
 		
 	}
 }
