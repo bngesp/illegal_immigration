@@ -449,7 +449,13 @@ experiment exec {
 		monitor "le de tentative de depart =>  " value:pays_sud[0].nbr_tentatives_depart;
 		monitor "le nombre de chomeur =>  " value:pays_sud[0].nbr_chomeurs;
 		monitor "le nombre d'emploi disponible =>  " value:emploi_disponible;
-		monitor "le nombre de mort =>  " value:nbr_mort;
+		//monitor "le nombre de depart =>  " value:nbr_mort;
 		
+		display courbe{
+			chart "Immigration clandestine" type:series x_label:"mois" y_label:"nombre de personnes"{
+				data "evolution du nombre d'immigre" value:pays_sud[0].nbr_immigres color:#red;
+				data "evolution taux de chomage" value:pays_sud[0].nbr_chomeurs color:#blue;
+			}
+		}
 	}
 }
